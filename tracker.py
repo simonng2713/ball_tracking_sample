@@ -123,7 +123,7 @@ def processForThresholding(frame, frameNo=0):
 
         if frameNo == saveFrameNo:
             cv2.imwrite('backgroundSub.jpg', frame)
-            print "Wrote bg subtracted image"
+            print ("Wrote bg subtracted image")
 
     # Convert to HSV color space
     hsvBlurredFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -173,11 +173,11 @@ def findBallsInImage(image, ballCenters, ballVelocities, frameNo=0):
             blankImage = np.zeros((height, width, 3), np.uint8);
 
             for point in points.tolist():
-                print int(point[0]), int(point[1])
+                print (int(point[0]), int(point[1]))
                 cv2.circle(blankImage, (int(point[0]), int(point[1])), 6, (255, 255, 255), thickness=6)
             if len(points) > 0:
                 cv2.imwrite('outlierRejected.jpg', blankImage)
-                print "Wrote outlier image"
+                print ("Wrote outlier image")
 
     if len(points) == 0:
         return []
@@ -303,7 +303,7 @@ def drawBallsAndTrajectory(frameCopy, matches, ballCenters, ballVelocities, ball
 
     if frameNo == saveFrameNo:
         cv2.imwrite('clusteredMatched.jpg', frameCopy)
-        print "Wrote clustered and matched image"
+        print ("Wrote clustered and matched image")
 
     for i in ballIndices:
         for position in positions:
@@ -313,7 +313,7 @@ def drawBallsAndTrajectory(frameCopy, matches, ballCenters, ballVelocities, ball
 
     if frameNo == saveFrameNo:
         cv2.imwrite('predicted.jpg', frameCopy)
-        print "Wrote predicted image"
+        print ("Wrote predicted image")
 
         # Draw velocity vectors
         # cv2.arrowedLine(frameCopy, (int(centerX), int(centerY)), (int(ballCenters[i][0]+ballVelocities[i][0]*2), int(ballCenters[i][1]+ballVelocities[i][1]*2)), ballTrajectoryMarkerColors[i], 2, 2, 0, 0.1)
@@ -351,14 +351,14 @@ def main():
 
             if frameNo == saveFrameNo:
                 cv2.imwrite('thresholded.jpg', thresholdImage)
-                print "Wrote thresholded image"
+                print ("Wrote thresholded image")
 
             # Open to remove small elements/noise
             thresholdImage = smoothNoise(thresholdImage)
 
             if frameNo == saveFrameNo:
                 cv2.imwrite('denoised.jpg', thresholdImage)
-                print "Wrote denoised image"
+                print ("Wrote denoised image")
 
             # if color == 'orange':
                 # cv2.imshow('thresholdImage', thresholdImage)
