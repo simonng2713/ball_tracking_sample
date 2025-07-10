@@ -12,6 +12,9 @@ FPS = 30.0
 TIME_STEP_SIZE = 1.0 / FPS
 EULER_STEPS = 18
 
+global_low = np.array([0, 0, 0], np.uint8)  # Full range for sensor
+global_high = np.array([255, 255, 255], np.uint8)  # Full range for sensor
+
 # HSV color bounds for ball detection
 HSV_COLOR_BOUNDS = {
     'darkGreen': (np.array([35, 50, 20], np.uint8), np.array([80, 255, 120], np.uint8)),
@@ -23,6 +26,7 @@ HSV_COLOR_BOUNDS = {
     'darkYellow': (np.array([20, 115, 140], np.uint8), np.array([25, 205, 230], np.uint8)),
     'darkYellowAttempt2(isolating)': (np.array([20, 90, 117], np.uint8), np.array([32, 222, 222], np.uint8)),
     'orange2': (np.array([2, 150, 140], np.uint8), np.array([19, 255, 204], np.uint8)),
+    'Sensor': (global_low, global_high),  # Full range for sensor
     'A': (np.array([40, 55, 150], np.uint8), np.array([110, 160, 220], np.uint8)),
     'B': (np.array([30, 105, 70], np.uint8), np.array([105, 180, 155], np.uint8)),
     'C': (np.array([20, 145, 165], np.uint8), np.array([80, 205, 225], np.uint8)),
@@ -91,7 +95,7 @@ def process_for_thresholding(frame, frame_no=0):
         fgmask = fgbg.apply(frame, None, 0.01)
         frame = cv2.bitwise_and(frame, frame, mask=fgmask)
         if frame_no == SAVE_FRAME_NO:
-            cv2.imwrite('backgroundSub.jpg', frame)
+            #cv2.imwrite('backgroundSub.jpg', frame)
             print('Wrote bg subtracted image')
     return cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
@@ -117,7 +121,7 @@ def find_balls_in_image(image, ball_centers, ball_velocities, frame_no=0):
             blank = np.zeros((h, w, 3), np.uint8)
             for x, y in points:
                 cv2.circle(blank, (int(y), int(x)), 6, (255, 255, 255), thickness=6)
-            cv2.imwrite('outlierRejected.jpg', blank)
+            #cv2.imwrite('outlierRejected.jpg', blank)
             print('Wrote outlier image')
     if len(points) == 0 or len(points) < num_balls_to_find:
         return []
@@ -179,7 +183,7 @@ def draw_balls_and_trajectory(frame, matches, ball_centers, ball_velocities, bal
             if 0 <= px < frame.shape[1] and 0 <= py < frame.shape[0]:
                 cv2.circle(frame, (px, py), 2, BALL_TRAJECTORY_MARKER_COLORS[i], thickness=2)
     if frame_no == SAVE_FRAME_NO:
-        cv2.imwrite('predicted.jpg', frame)
+        #cv2.imwrite('predicted.jpg', frame)
         print('Wrote predicted image')
     return frame
 
@@ -192,7 +196,12 @@ def main():
 
     cv2.namedWindow('Image with Estimated Ball Center', cv2.WINDOW_KEEPRATIO)
     cv2.resizeWindow('Image with Estimated Ball Center', 1280, 720)
-    
+
+    # Add these before your main loop, after creating the window
+    for i, name in enumerate(['H', 'S', 'V']):
+        cv2.createTrackbar(f'Low {name}', 'Image with Estimated Ball Center', int(global_low[i]), 255, lambda v, idx=i: global_low.__setitem__(idx, v))
+        cv2.createTrackbar(f'High {name}', 'Image with Estimated Ball Center', int(global_high[i]), 255, lambda v, idx=i: global_high.__setitem__(idx, v))
+
     while cap.isOpened():
         frame = get_frame(cap)
         if frame is None:
@@ -201,13 +210,14 @@ def main():
         hsv_frame = process_for_thresholding(frame, frame_no)
         for color, ball_indices in zip(['A', 'B', 'C'], ([0], [1], [2])):
             color_bounds = HSV_COLOR_BOUNDS[color]
-            thresh_img = cv2.inRange(hsv_frame, color_bounds[0], color_bounds[1])
+            #thresh_img = cv2.inRange(hsv_frame, color_bounds[0], color_bounds[1])
+            thresh_img = cv2.inRange(hsv_frame, global_low, global_high)  # Use current trackbar values
             if frame_no == SAVE_FRAME_NO:
-                cv2.imwrite('thresholded.jpg', thresh_img)
+                #cv2.imwrite('thresholded.jpg', thresh_img)
                 print('Wrote thresholded image')
             thresh_img = smooth_noise(thresh_img)
             if frame_no == SAVE_FRAME_NO:
-                cv2.imwrite('denoised.jpg', thresh_img)
+                #cv2.imwrite('denoised.jpg', thresh_img)
                 print('Wrote denoised image')
             centers_to_pair = [ball_centers[idx] for idx in ball_indices]
             velocities_to_pair = [ball_velocities[idx] for idx in ball_indices]
